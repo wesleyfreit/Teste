@@ -12,6 +12,8 @@ server.use(express.json());
 server.use(cors());
 server.use(router);
 
+server.get('/', (req, res) => res.json("Hello World"))
+
 server.listen(port, () => {
   console.log('The server is running');
 });
