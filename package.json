@@ -7,9 +7,9 @@
     "node": "14.x"
   },
   "scripts": {
-    "dev": "tsx watch ./src/server.ts",
-    "build": "npx tsc",
-    "start": "node ./src/server.js"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node build/server.js"
   },
   "keywords": [],
   "author": "",
