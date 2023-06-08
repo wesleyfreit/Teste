@@ -44,7 +44,7 @@ export class EventController {
       if (events.length > 0) return res.json(events);
       else return res.sendStatus(204);
     } catch (error) {
-      return res.sendStatus(500);
+      return res.sendStatus(404);
     }
   }
 
