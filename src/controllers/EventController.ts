@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Event from '../models/Event';
-import redisConnection from "../../database/redis"
+import redisConnection from '../../database/redis';
 
 const redisClient = redisConnection.getClient();
 
@@ -32,20 +32,13 @@ export class EventController {
     const { value } = req.query;
     try {
       if (value) {
-        const redisConsult = await redisClient.get(value as string);
-        if (redisConsult) return res.json(JSON.parse(redisConsult));
-        //transformando o valor para a busca ser case-insensitive
         const regex = new RegExp(value as string, 'i');
         const events = await Event.find(
           { $or: [{ title: { $regex: regex } }, { description: { $regex: regex } }] },
           { _id: true, __v: false },
         );
-        if (events.length > 0) {
-          await redisClient.set(value as string, JSON.stringify(events), {
-            EX: 3600,
-          });
-          return res.json(events);
-        } else return res.sendStatus(204);
+        if (events.length > 0) return res.json(events);
+        else return res.sendStatus(204);
       }
       const events = await Event.find({}, { _id: true, __v: false }).sort({ startDate: -1 });
       if (events.length > 0) return res.json(events);
@@ -68,7 +61,7 @@ export class EventController {
         return res.json(event);
       } else return res.sendStatus(204);
     } catch (error) {
-      return res.sendStatus(500);
+      return res.sendStatus(404);
     }
   }
 
@@ -80,11 +73,13 @@ export class EventController {
         const event = await Event.findById(id);
         if (event) {
           const result = await Event.updateOne({ _id: id }, { ...body });
-          if (result) return res.sendStatus(200);
-          else return res.sendStatus(400);
+          if (result) {
+            await redisClient.del(id);
+            return res.sendStatus(200);
+          } else return res.sendStatus(400);
         } else return res.sendStatus(204);
       } catch (error) {
-        return res.sendStatus(500);
+        return res.sendStatus(404);
       }
     } else return res.sendStatus(400);
   }
@@ -95,11 +90,13 @@ export class EventController {
       const event = await Event.findById(id);
       if (event) {
         const result = await Event.deleteOne({ _id: id });
-        if (result) return res.sendStatus(200);
-        else return res.sendStatus(400);
+        if (result) {
+          await redisClient.del(id);
+          return res.sendStatus(200);
+        } else return res.sendStatus(400);
       } else return res.sendStatus(204);
     } catch (error) {
-      return res.sendStatus(500);
+      return res.sendStatus(404);
     }
   }
 }
