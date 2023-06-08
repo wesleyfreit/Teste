@@ -8,7 +8,7 @@ dotenv.config();
 const server = express();
 
 server.use(express.json());
-server.use(cors({origin: process.env.URL_PERM}));
+server.use(cors({origin: process.env.URL_PERM}, credentials: true));
 server.use(router);
 
 server.listen({ port: process.env.PORT || 8080 }, () => {
