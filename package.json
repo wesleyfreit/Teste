@@ -5,8 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "tsc": "./node_modules/typescript/bin/tsc",
-    "build": "tsc",
+    "build": "npx tsc",
     "start": "node src/index.js"
   },
   "keywords": [],
