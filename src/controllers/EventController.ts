@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import Event from '../models/Event';
+import redisConnection from "../../database/redis"
+
+const redisClient = redisConnection.getClient();
 
 type iEvent = {
   title: string;
@@ -29,14 +32,20 @@ export class EventController {
     const { value } = req.query;
     try {
       if (value) {
+        const redisConsult = await redisClient.get(value as string);
+        if (redisConsult) return res.json(JSON.parse(redisConsult));
         //transformando o valor para a busca ser case-insensitive
         const regex = new RegExp(value as string, 'i');
         const events = await Event.find(
           { $or: [{ title: { $regex: regex } }, { description: { $regex: regex } }] },
           { _id: true, __v: false },
         );
-        if (events.length > 0) return res.json(events);
-        else return res.sendStatus(204);
+        if (events.length > 0) {
+          await redisClient.set(value as string, JSON.stringify(events), {
+            EX: 3600,
+          });
+          return res.json(events);
+        } else return res.sendStatus(204);
       }
       const events = await Event.find({}, { _id: true, __v: false }).sort({ startDate: -1 });
       if (events.length > 0) return res.json(events);
@@ -49,9 +58,15 @@ export class EventController {
   public async findEvent(req: Request, res: Response) {
     const id = req.params.id;
     try {
+      const redisConsult = await redisClient.get(id);
+      if (redisConsult) return res.json(JSON.parse(redisConsult));
       const event = await Event.findById(id);
-      if (event) return res.json(event);
-      else return res.sendStatus(204);
+      if (event) {
+        await redisClient.set(id, JSON.stringify(event), {
+          EX: 3600,
+        });
+        return res.json(event);
+      } else return res.sendStatus(204);
     } catch (error) {
       return res.sendStatus(500);
     }
