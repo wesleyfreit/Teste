@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx tsc",
+    "build": "npm run tsc",
     "start": "node src/index.js"
   },
   "keywords": [],
